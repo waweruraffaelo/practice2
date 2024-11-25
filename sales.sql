@@ -96,3 +96,38 @@ WITH CTE_Duplicates AS(
 SELECT*
 FROM
 CTE_Duplicates WHERE UniqueID =1
+
+
+SELECT * FROM geo;
+
+
+
+
+
+WITH SalesData AS (
+    SELECT 
+        g.Geo,
+        g.Region,
+        p.product,
+        SUM(s.Amount) AS total_sales
+    FROM sales s
+    INNER JOIN products p ON s.Product = p.Product_ID
+    INNER JOIN geo g ON s.Geo = g.GeoID
+    GROUP BY g.Geo, g.Region, p.Product
+),
+RankedSales AS (
+    SELECT 
+        Geo,
+        Region,
+        Product,
+        total_sales,
+        ROW_NUMBER() OVER (PARTITION BY Geo, region ORDER BY total_sales DESC) AS rank
+    FROM SalesData
+)
+SELECT 
+    Geo As Country,
+    Region,
+    Product,
+    total_sales
+FROM RankedSales
+WHERE rank = 1;
